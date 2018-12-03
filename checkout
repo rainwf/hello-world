@@ -1,0 +1,34 @@
+
+if [ $# -ne 1 ]
+then
+    echo Missing filename
+    echo Usage: checkout filename
+    exit 1
+fi
+me=`whoami`
+locked=`git lfs locks | grep $1`
+if [ $? -eq 0 ] 
+then 
+    echo $locked | grep rainwf2 >/dev/null 
+    if [ $? -eq 0 ] 
+    then 
+        msg "$me" $1 already checked out
+    else
+        who=`echo $locked | cut -d ' ' -f2`
+		msg "$me" $1 already checked out by $who
+    fi
+else 
+    git lfs lock $1 > /dev/null
+    if [ $? -eq 0 ] 
+    then 
+        git lfs pull --include=$1
+        if [ $? -ne 0 ] 
+        then 
+            git lfs unlock $1 > /dev/null
+			msg "$me" checkout of $1 failed
+	fi
+    else 
+		msg "$me" cannot obtain lock on $1
+    fi
+fi
+

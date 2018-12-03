@@ -1,0 +1,33 @@
+
+if [ $# -ne 1 ]
+then
+    echo Missing filename
+    echo Usage: checkin filename
+    exit 1
+fi
+me=`whoami`
+locked=`git lfs locks | grep $1` 
+if [ $? -eq 0 ] 
+then 
+    echo $locked | grep rainwf2 >/dev/null 
+    if [ $? -eq 0 ] 
+    then 
+	    git add $1
+        git commit -m "checkin"
+#		gitid=`git lfs ls-files -l -I $1 | cut -d ' ' -f1`
+#		git lfs push --object-id origin $gitid
+        git push origin master
+		if [ $? -ne 0 ] 
+        then 
+		    msg "$me" checkin failed: $1 push failed
+		else
+		    git lfs unlock $1 > /dev/null
+		fi
+    else
+        who=`echo $locked | cut -d ' ' -f2`
+        msg "$me" checkin failed: $1 checked out by $who
+    fi
+else 
+    msg "$me" checkin failed: $1 not locked
+fi
+
