@@ -6,7 +6,7 @@ msg "$me" $1
 if [ $? -ne 0 ]
 then 
     echo $1
-fi	
+fi
 return
 }
 
@@ -30,17 +30,17 @@ then
     echo $locked | grep $github_username >/dev/null 
     if [ $? -eq 0 ] 
     then 
-	    git add $1
-        git commit -m "checkin"
+        git add $1 >/dev/null
+        git commit -m "checkin" >/dev/null
 #		gitid=`git lfs ls-files -l -I $1 | cut -d ' ' -f1`
 #		git lfs push --object-id origin $gitid
-        git push origin master
-		if [ $? -ne 0 ] 
+        git push origin master >/dev/null
+        if [ $? -ne 0 ] 
         then 
-		    domsg "checkin failed: $1 push failed"
-		else
-		    git lfs unlock $1 > /dev/null
-		fi
+            domsg "checkin failed: $1 push failed"
+        else
+            git lfs unlock $1 > /dev/null
+        fi
     else
         who=`echo $locked | cut -d ' ' -f2`
         domsg "checkin failed: $1 checked out by $who"

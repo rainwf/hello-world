@@ -32,7 +32,7 @@ then
         domsg "$1 already checked out"
     else
         who=`echo $locked | cut -d ' ' -f2`
-		domsg "$1 already checked out by $who"
+        domsg "$1 already checked out by $who"
     fi
 else 
     git lfs lock $1 > /dev/null
@@ -42,10 +42,10 @@ else
         if [ $? -ne 0 ] 
         then 
             git lfs unlock $1 > /dev/null
-			domsg "checkout of $1 failed"
-	fi
+            domsg "checkout of $1 failed"
+        fi
     else 
-		domsg "cannot obtain lock on $1"
+            domsg "cannot obtain lock on $1"
     fi
 fi
 
