@@ -1,4 +1,16 @@
 
+domsg()
+{
+me=`whoami`
+msg "$me" $1
+if [ $? -ne 0 ]
+then 
+    echo $1
+fi	
+return
+}
+
+# main
 if [ $# -ne 1 ]
 then
     echo Missing filename
@@ -6,16 +18,21 @@ then
     exit 1
 fi
 me=`whoami`
+#git_root=`git rev-parse --show-toplevel`
+git lfs lock .gitattributes >/dev/null
+locked=`git lfs locks | grep .gitattributes`
+github_username=`echo $locked | cut -d ' ' -f2`
+git lfs unlock .gitattributes >/dev/null
 locked=`git lfs locks | grep $1`
 if [ $? -eq 0 ] 
 then 
-    echo $locked | grep rainwf2 >/dev/null 
+    echo $locked | grep $github_username >/dev/null 
     if [ $? -eq 0 ] 
     then 
-        msg "$me" $1 already checked out
+        domsg "$1 already checked out"
     else
         who=`echo $locked | cut -d ' ' -f2`
-		msg "$me" $1 already checked out by $who
+		domsg "$1 already checked out by $who"
     fi
 else 
     git lfs lock $1 > /dev/null
@@ -25,10 +42,10 @@ else
         if [ $? -ne 0 ] 
         then 
             git lfs unlock $1 > /dev/null
-			msg "$me" checkout of $1 failed
+			domsg "checkout of $1 failed"
 	fi
     else 
-		msg "$me" cannot obtain lock on $1
+		domsg "cannot obtain lock on $1"
     fi
 fi
 
