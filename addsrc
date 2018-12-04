@@ -1,0 +1,40 @@
+
+domsg()
+{
+me=`whoami`
+msg "$me" $1
+if [ $? -ne 0 ]
+then 
+    echo $1
+fi
+return
+}
+
+# main
+if [ $# -ne 1 ]
+then
+    echo Missing filename
+    echo Usage: addsource filename
+    exit 1
+fi
+
+git add $1 >/dev/null
+if [ $? -ne 0 ] 
+then 
+    domsg "addsource failed: $1 add failed"
+    exit 1
+fi
+
+git commit -m "addsource" >/dev/null
+if [ $? -ne 0 ] 
+then 
+    domsg "addsource failed: $1 commit failed"
+    exit 1
+fi
+
+git push origin master >/dev/null
+if [ $? -ne 0 ] 
+then 
+    domsg "addsource failed: $1 push failed"
+fi
+
