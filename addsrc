@@ -1,4 +1,20 @@
 
+getdir()
+{
+file=$1
+file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
+DIR=$(dirname "${file}")
+echo "${DIR}"
+}
+
+getfile()
+{
+file=$1
+file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
+FILE=$(basename "${file}")
+echo "${FILE}"
+}
+
 domsg()
 {
 me=`whoami`
@@ -6,7 +22,7 @@ msg "$me" $1
 if [ $? -ne 0 ]
 then 
     echo $1
-fi
+fi	
 return
 }
 
@@ -14,27 +30,32 @@ return
 if [ $# -ne 1 ]
 then
     echo Missing filename
-    echo Usage: addsource filename
+    echo Usage: $0 filename
     exit 1
 fi
 
-git add $1 >/dev/null
+GITDIR="$(getdir $1)"
+cd "${GITDIR}"
+
+CKFILE="$(getfile $1)"
+
+git add $CKFILE >/dev/null
 if [ $? -ne 0 ] 
 then 
-    domsg "addsource failed: $1 add failed"
+    domsg "$0 failed: $CKFILE add failed"
     exit 1
 fi
 
-git commit -m "addsource" >/dev/null
+git commit -m "$0" >/dev/null
 if [ $? -ne 0 ] 
 then 
-    domsg "addsource failed: $1 commit failed"
+    domsg "$0 failed: $CKFILE commit failed"
     exit 1
 fi
 
 git push origin master >/dev/null
 if [ $? -ne 0 ] 
 then 
-    domsg "addsource failed: $1 push failed"
+    domsg "$0 failed: $CKFILE push failed"
 fi
 
