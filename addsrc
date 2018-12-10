@@ -1,0 +1,61 @@
+
+getdir()
+{
+file=$1
+file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
+DIR=$(dirname "${file}")
+echo "${DIR}"
+}
+
+getfile()
+{
+file=$1
+file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
+FILE=$(basename "${file}")
+echo "${FILE}"
+}
+
+domsg()
+{
+me=`whoami`
+msg "$me" $1
+if [ $? -ne 0 ]
+then 
+    echo $1
+fi	
+return
+}
+
+# main
+if [ $# -ne 1 ]
+then
+    echo Missing filename
+    echo Usage: $0 filename
+    exit 1
+fi
+
+GITDIR="$(getdir $1)"
+cd "${GITDIR}"
+
+CKFILE="$(getfile $1)"
+
+git add $CKFILE >/dev/null
+if [ $? -ne 0 ] 
+then 
+    domsg "$0 failed: $CKFILE add failed"
+    exit 1
+fi
+
+git commit -m "$0" >/dev/null
+if [ $? -ne 0 ] 
+then 
+    domsg "$0 failed: $CKFILE commit failed"
+    exit 1
+fi
+
+git push origin master >/dev/null
+if [ $? -ne 0 ] 
+then 
+    domsg "$0 failed: $CKFILE push failed"
+fi
+
