@@ -1,61 +1,46 @@
+set +e
 
-getdir()
-{
-file=$1
-file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
-DIR=$(dirname "${file}")
-echo "${DIR}"
-}
-
-getfile()
-{
-file=$1
-file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
-FILE=$(basename "${file}")
-echo "${FILE}"
-}
-
-domsg()
-{
-me=`whoami`
-msg "$me" $1
-if [ $? -ne 0 ]
-then 
-    echo $1
-fi	
-return
-}
+. /c/MCDean/git/hello-world/gitlib
 
 # main
+
+CMDFILE="$(getfile $0)"
+#echo CMDFILE $CMDFILE
+
 if [ $# -ne 1 ]
 then
     echo Missing filename
-    echo Usage: $0 filename
+    echo Usage: $CMDFILE filename
     exit 1
 fi
 
-GITDIR="$(getdir $1)"
-cd "${GITDIR}"
-
 CKFILE="$(getfile $1)"
+#echo CKFILE $CKFILE
 
 git add $CKFILE >/dev/null
 if [ $? -ne 0 ] 
 then 
-    domsg "$0 failed: $CKFILE add failed"
+    domsg "$CMDFILE: $CKFILE add failed"
     exit 1
 fi
 
-git commit -m "$0" >/dev/null
-if [ $? -ne 0 ] 
-then 
-    domsg "$0 failed: $CKFILE commit failed"
-    exit 1
+doissuemenu ISSUE
+if [ $ISSUE == "CANCEL" ]
+then
+		domsg "$CMDFILE: Add source of $CKFILE cancelled"
+	exit 0
+else
+	git commit -m "$ISSUE" >/dev/null
+	if [ $? -ne 0 ] 
+	then 
+		domsg "$CMDFILE: $CKFILE commit failed"
+		exit 1
+	fi
 fi
 
 git push origin master >/dev/null
 if [ $? -ne 0 ] 
 then 
-    domsg "$0 failed: $CKFILE push failed"
+    domsg "$CMDFILE: $CKFILE push failed"
 fi
 
