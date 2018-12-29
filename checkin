@@ -1,73 +1,56 @@
+set +e
 
-getdir()
-{
-file=$1
-file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
-DIR=$(dirname "${file}")
-echo "${DIR}"
-}
-
-getfile()
-{
-file=$1
-file="$(echo "$file" | sed -r -e 's|^[cC]:|/c|' -e 's|\\|/|g')"
-FILE=$(basename "${file}")
-echo "${FILE}"
-}
-
-domsg()
-{
-me=`whoami`
-msg "$me" $1
-if [ $? -ne 0 ]
-then 
-    echo $1
-fi
-return
-}
-
+. /c/MCDean/git/hello-world/gitlib
 
 # main
+
+CMDFILE="$(getfile $0)"
+#echo CMDFILE $CMDFILE
+
 if [ $# -ne 1 ]
 then
     echo Missing filename
-    echo Usage: $0 filename
+    echo Usage: $CMDFILE filename
     exit 1
 fi
 
-GITDIR="$(getdir $1)"
-cd "${GITDIR}"
+USERNAME="$(getusername)"
+#echo USERNAME $USERNAME
 
 CKFILE="$(getfile $1)"
+#echo CKFILE $CKFILE
 
-me=`whoami`
-#git_root=`git rev-parse --show-toplevel`
-git lfs lock .gitattributes >/dev/null
-locked=`git lfs locks | grep .gitattributes`
-github_username=`echo $locked | cut -d ' ' -f2`
-git lfs unlock .gitattributes >/dev/null
-locked=`git lfs locks | grep $CKFILE` 
+LOCKED=`git lfs locks | grep $CKFILE`
 if [ $? -eq 0 ] 
 then 
-    echo $locked | grep $github_username >/dev/null 
+{
+    echo $LOCKED | grep $USERNAME >/dev/null 
     if [ $? -eq 0 ] 
     then 
-        git add $CKFILE >/dev/null
-        git commit -m "checkin" >/dev/null
+        doissuemenu ISSUE
+	if [ $ISSUE == "CANCEL" ]
+	then
+            domsg "$CMDFILE: Check in of $CKFILE cancelled"
+	    exit 0
+        else
+            git add $CKFILE >/dev/null
+            git commit -m "$ISSUE" >/dev/null
 #		gitid=`git lfs ls-files -l -I $CKFILE | cut -d ' ' -f1`
 #		git lfs push --object-id origin $gitid
-        git push origin master >/dev/null
-        if [ $? -ne 0 ] 
-        then 
-            domsg "$0 failed: $CKFILE push failed"
-        else
-            git lfs unlock $CKFILE > /dev/null
-        fi
+            git push origin master >/dev/null
+            if [ $? -ne 0 ] 
+            then 
+                domsg "$CMDFILE: $CKFILE push failed"
+            else
+                git lfs unlock $CKFILE > /dev/null
+            fi
+	fi
     else
-        who=`echo $locked | cut -d ' ' -f2`
-        domsg "$0 failed: $CKFILE checked out by $who"
+        WHO=`echo $LOCKED | cut -d ' ' -f2`
+        domsg "$CMDFILE: $CKFILE checked out by $WHO"
     fi
+}
 else 
-    domsg "$0 failed: $CKFILE not locked"
+    domsg "$CMDFILE: $CKFILE is not checked out"
 fi
 
